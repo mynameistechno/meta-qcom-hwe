@@ -1,0 +1,64 @@
+name: PR Auto Assignment
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  auto_assign:
+    runs-on: ubuntu-latest
+    name: Auto-assign PRs
+    steps:
+      - uses: actions/checkout@v4  
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+        
+      - name: Parse CODEOWNERS
+        id: codeowners
+        uses: SvanBoxel/codeowners-action@v1
+        with: 
+          path: './.github/CODEOWNERS'
+
+      - name: List Codeowners matched files
+        env:
+          CODEOWNERS_MATCHED_FILES: ${{ steps.codeowners.outputs.codeowners }}          
+        run: |
+          for file in ${CODEOWNERS_MATCHED_FILES}; do
+            echo "$file was changed"
+          done
+
+      # - name: Match changed files
+      #   uses: actions/github-script@v7
+      #   env:
+      #     ALL_CHANGED_FILES: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}
+      #     CODEOWNERS_MATCHED_FILES: ${{ toJson(steps.codeowners.outputs.codeowners) }}             
+      #   with:
+      #     script: |
+      #       const { ALL_CHANGED_FILES, CODEOWNERS_MATCHED_FILES } = process.env
+      #       console.log(ALL_CHANGED_FILES)
+      #       console.log(CODEOWNERS_MATCHED_FILES)
+      #       for (const file of ALL_CHANGED_FILES) {
+      #         console.log(file)
+      #         console.log(CODEOWNERS_MATCHED_FILES[file])
+      #       }           
+
+      - name: Match changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+          CODEOWNERS_MATCHED_FILES: ${{ fromJson(steps.codeowners.outputs.codeowners) }}        
+        run: |
+          for changed_file in ${ALL_CHANGED_FILES}; do
+            echo "$changed_file" 
+            matched_file=$(echo $CODEOWNERS_MATCHED_FILES | jq '."$changed_file"')
+            echo "$matched_file"          
+          done  

@@ -1,0 +1,8 @@
+# Global owners
+* @rsalveti @sbanerjee-quic
+
+# ci
+/ci/ @doanac
+
+# test
+/.github/workflows/pr-assignment.yml @mynameistechno
